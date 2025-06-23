@@ -14,5 +14,5 @@ La logica del juego se basa en que el jugador debe de pasar el laberinto recolec
 
 autores:
 
-1.Sheilyn Cordoba Bravo C5E465
-2.John Alfaro Barboza C5C214
+1. Sheilyn Cordoba Bravo C5E465
+2. John Alfaro Barboza C5C214
