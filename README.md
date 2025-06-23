@@ -10,4 +10,8 @@ instrucciones:
 
 La unica libreria utilizada para la creacion del laberinto fue tkinter.
 
-La logica del juego se basa en que el jugador debe de pasar el laberinto sin perder las 3 vidas proporcionadas, en el tercer nivel el jugaor debera recoger llavez para poder salir del laberinto.
+La logica del juego se basa en que el jugador debe de pasar el laberinto recolectando llaves parta poder pasar el nivel sin perder las 3 vidas proporcionadas, en el tercer nivel es del mismo modo simplemente quew llega a ser un poco mas complicado.
+
+autores:
+1.Sheilyn Cordoba Bravo C5E465
+2.John Alfaro Barboza C5C214
