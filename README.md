@@ -1,18 +1,17 @@
 # proyecto-de-intro-a-compu.
-nombre del proyecto: Laberinto
+Nombre del proyecto: Laberinto
 
-Este proyecto programado se basa en programar un codigo que permita crear una pestaña en la cual se pueda jugar con un laberinto de 3 niveles.
+Este proyecto programado se basa en la creación de un código que permita crear una pestaña en la cual se pueda jugar con un laberinto de 3 niveles, cada uno con una dificultad mayor al anterior, siendo el último el más difícil de todos.
 
-instrucciones:
-1. copiar el codigo proporcionado por los estudiantes.
-2. colocarlo en alguna plataforma en la cual se pueda correr el codigo.
-3. disfrutar del juego.
+Instrucciones:
+1. Copiar el codigo proporcionado por los estudiantes.
+2. Colocarlo en alguna plataforma en la cual se pueda correr el codigo.
+3. Disfrutar del juego.
 
-La unica libreria utilizada para la creacion del laberinto fue tkinter.
+La única libreria utilizada para la creacion del laberinto fue tkinter para la parte gráfica del juego.
 
-La logica del juego se basa en que el jugador debe de pasar el laberinto recolectando llaves para poder pasar el nivel sin perder las 3 vidas proporcionadas, en el tercer nivel es del mismo modo simplemente que llega a ser un poco mas complicado.
+La lógica del juego se basa en que el jugador debe de pasar el laberinto recolectando llaves para poder pasar el nivel sin perder las 3 vidas proporcionadas, en caso de perderlas todas, pierde inmediatamente el juego. En el tercer nivel, se desafía al jugador con el reto más difícil, que pone a prueba la agilidad del mismo pues este supera en dificultad a los dos niveles anteriores.
 
-autores:
-
-1. Sheilyn Cordoba Bravo C5E465
+Autores:
+1. Sheilyn Córdoba Bravo C5E465
 2. John Alfaro Barboza C5C214
