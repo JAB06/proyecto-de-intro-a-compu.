@@ -10,7 +10,7 @@ Instrucciones:
 
 La única libreria utilizada para la creacion del laberinto fue tkinter para la parte gráfica del juego.
 
-La lógica del juego se basa en que el jugador debe de pasar el laberinto recolectando llaves para poder pasar el nivel sin perder las 3 vidas proporcionadas, en caso de perderlas todas, pierde inmediatamente el juego. En el tercer nivel, se desafía al jugador con el reto más difícil, que pone a prueba la agilidad del mismo pues este supera en dificultad a los dos niveles anteriores.
+La lógica del juego se basa en que el jugador debe de pasar el laberinto recolectando llaves para poder pasar el nivel sin perder las 3 vidas proporcionadas, en caso de perderlas todas, pierde inmediatamente el juego. En el tercer nivel, se desafía al jugador con el reto más difícil, que pone a prueba la agilidad del mismo, pues este supera en dificultad a los dos niveles anteriores.
 
 Autores:
 1. Sheilyn Córdoba Bravo C5E465
