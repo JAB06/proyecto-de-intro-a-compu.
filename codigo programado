@@ -5,6 +5,8 @@ import time
 import csv
 import os
 from collections import deque
+from PIL import Image, ImageTk
+import pygame
 
 class LaberintoApp:
     def __init__(self, root):
@@ -18,8 +20,14 @@ class LaberintoApp:
         """
         self.root = root
         self.root.title("Laberinto Extremo")
-        self.root.geometry("650x700")
+        self.root.geometry("900x900")
         
+        pygame.mixer.init()  # Inicializar el mezclador de pygame para sonidos
+        try:
+            pygame.mixer.music.load("musica.mp3")  # Cargar música de fondo
+            pygame.mixer.music.play(-1)  # Reproducir en bucle
+        except pygame.error as e:
+            print(f"Error al cargar la música de fondo: {e}")
         # Variables de estado del juego
         self.player_name = ""       # Nombre del jugador
         self.level = 1              # Nivel seleccionado
@@ -44,7 +52,6 @@ class LaberintoApp:
             with open(self.scores_file, 'w', newline='') as f:
                 csv.writer(f).writerow(["Nombre", "Nivel", "Tiempo(s)", "Vidas", "Llaves"])
         
-        # Mostrar menú principal al iniciar la app
         self.show_main_menu()
 
     def show_main_menu(self):
@@ -53,33 +60,39 @@ class LaberintoApp:
         Permite al usuario ingresar su nombre, elegir el nivel y otras opciones.
         """
         self.clear_frame()
-        tk.Label(self.root, text="LABERINTO EXTREMO", font=("Arial", 24, "bold")).pack(pady=20)
-        
-        # Nombre del jugador
-        tk.Label(self.root, text="Tu nombre:").pack()
-        self.name_entry = tk.Entry(self.root, font=("Arial", 12))
-        self.name_entry.pack(pady=5)
-        self.name_entry.insert(0, "Jugador")
-        
-        # Selección de nivel
-        tk.Label(self.root, text="Selecciona nivel:").pack(pady=10)
+        # Cargar imagen de fondo
+        bg_image = Image.open("imagen.png")
+        bg_image = bg_image.resize((900, 900))
+        self.menu_bg_photo = ImageTk.PhotoImage(bg_image)
+        bg_label = tk.Label(self.root, image=self.menu_bg_photo)
+        bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+       
+   
+        #objetos de la interfaz del menú principal
+        tk.Label(self.root, text="LABERINTO EXTREMO", font=("Press Start 2P", 26, "bold")).pack(pady=40)
+        #nombre del jugador
+        tk.Label(self.root, text="Tu nombre:", font=("Press Start 2P", 26)).pack()
+        self.name_entry = tk.Entry(self.root, font=("Press Start 2P", 24))
+        self.name_entry.pack(pady=15)
+
+        #seleccion de nivel
+        tk.Label(self.root, text="Selecciona nivel:", font=("Press Start 2P", 28)).pack(pady=50)
         self.level_var = tk.IntVar(value=1)
         levels = ["Nivel 1 (5x5) - Fácil", "Nivel 2 (8x8) - Difícil", "Nivel 3 (10x10) - Imposible"]
         for i, text in enumerate(levels, 1):
-            tk.Radiobutton(self.root, text=text, variable=self.level_var, value=i, 
-                            font=("Arial", 10)).pack(pady=2)
-        
-        # Botones principales
+            tk.Radiobutton(self.root, text=text, variable=self.level_var, value=i, font=("Press Start 2P", 20)).pack(pady=2)
+        buttons_frame = tk.Frame(self.root)
+        buttons_frame.pack(pady=30)
         buttons = [
             ("JUGAR", self.start_game, "#4CAF50"),
-            ("VER PUNTUACIONES", self.show_scores, "#2196F3"),
+            ("PUNTUACIONES", self.show_scores, "#2196F3"),
             ("SALIR", self.root.quit, "#F44336")
         ]
         for text, cmd, color in buttons:
-            tk.Button(self.root, text=text, command=cmd, bg=color, fg="white",
-                            font=("Arial", 12 if text=="JUGAR" else 10, "bold"), 
-                            width=20 if text=="JUGAR" else 15, 
-                            height=2 if text=="JUGAR" else 1).pack(pady=8)
+            tk.Button(buttons_frame, text=text, command=cmd,bg=color, fg="white",
+                      font=("Press Start 2P", 16,"bold"), 
+                      width=14, 
+                      height=2).pack(pady=8)
 
     def start_game(self):
         """
@@ -112,13 +125,13 @@ class LaberintoApp:
         
         # Actualizar original_maze_content con la salida
         self.original_maze_content[self.exit_pos[0]][self.exit_pos[1]] = 2 
-        self.maze[self.exit_pos[0]][self.exit_pos[1]] = 2 # Set exit in current maze too
+        self.maze[self.exit_pos[0]][self.exit_pos[1]] = 2 # Establecer salida en el laberinto actual
 
-        self.place_accessible_keys() # This updates self.maze and original_maze_content
-        
+        self.place_accessible_keys() # Esto actualiza self.maze y original_maze_content
+
         if self.level == 3:
-            self.place_moving_walls() # This updates self.maze and original_maze_content
-        
+            self.place_moving_walls() # Esto actualiza self.maze y original_maze_content
+
         self.start_time = time.time()
         self.show_game_interface()
         
@@ -134,7 +147,7 @@ class LaberintoApp:
         :param cols: número de columnas
         :return: matriz que representa el laberinto
         """
-        # Ensure maze dimensions are odd for proper path generation with DFS
+        # esto asegura que las dimensiones del laberinto sean impares para una generación de caminos adecuada
         if rows % 2 == 0: rows += 1
         if cols % 2 == 0: cols += 1
 
@@ -182,7 +195,7 @@ class LaberintoApp:
                     available_cells.append((i, j))
         
         if not available_cells:
-            # Fallback for very rare cases, might indicate an issue with maze generation for small sizes
+            # El recurso alternativo para casos muy raros podría indicar un problema con la generación del laberinto para tamaños pequeños.
             print("Warning: No available empty cells found. Returning (1,1).")
             return (1, 1) 
         
@@ -195,7 +208,7 @@ class LaberintoApp:
         accessible_positions = []
         for i in range(1, len(self.maze)-1):
             for j in range(1, len(self.maze[0])-1):
-                # Ensure it's an empty path cell and not player/exit
+                # Asegura de que sea celda de ruta vacia y no jugador/salida
                 if self.maze[i][j] == 0 and (i, j) != self.player_pos and (i, j) != self.exit_pos:
                     if self.is_accessible(self.player_pos, (i, j)):
                         accessible_positions.append((i, j))
@@ -205,7 +218,7 @@ class LaberintoApp:
         for _ in range(min(self.keys_required, len(accessible_positions))):
             pos = accessible_positions.pop(0) 
             self.maze[pos[0]][pos[1]] = 3 # Llave
-            self.original_maze_content[pos[0]][pos[1]] = 3 # Mark key in original content too
+            self.original_maze_content[pos[0]][pos[1]] = 3 # se marca la clave en el contenido original
 
     def is_accessible(self, start, end):
         """
@@ -229,7 +242,7 @@ class LaberintoApp:
                 nr, nc = r + dr, c + dc
                 if (0 <= nr < rows and 0 <= nc < cols and 
                     not visited[nr][nc] and 
-                    self.maze[nr][nc] in [0, 2, 3]): # Allow passing through exit and keys for pathfinding
+                    self.maze[nr][nc] in [0, 2, 3]): # Permite el paso de salidas y claves para la busqueda de rutas
                     visited[nr][nc] = True
                     queue.append((nr, nc))
         
@@ -243,12 +256,12 @@ class LaberintoApp:
         accessible_positions = []
         for i in range(1, len(self.maze)-1):
             for j in range(1, len(self.maze[0])-1):
-                # Ensure it's an empty path cell, not player/exit, and not already a key
+                # asegura de que sea celda de ruta vacia, no jugador/salida, y que no se a clave
                 if self.maze[i][j] == 0 and (i, j) != self.player_pos and \
                    (i, j) != self.exit_pos and self.maze[i][j] != 3:
-                    # Also ensure the cell to the left/right of the potential wall placement is a path (0)
-                    # This helps ensure walls have room to move horizontally.
-                    if j > 1 and j < len(self.maze[0]) - 2: # Check valid column range for movement
+                    # También asegura que la celda a la izquierda/derecha de la posible colocación de la pared sea un camino (0)
+                    # Esto ayuda a asegurar que las paredes tengan espacio para moverse horizontalmente.
+                    if j > 1 and j < len(self.maze[0]) - 2: # Verifica el rango de columna válido para el movimiento
                         if self.maze[i][j-1] == 0 and self.maze[i][j+1] == 0:
                             if self.is_accessible(self.player_pos, (i, j)):
                                 accessible_positions.append((i, j))
@@ -259,7 +272,7 @@ class LaberintoApp:
             if accessible_positions:
                 pos = accessible_positions.pop(0)
                 self.maze[pos[0]][pos[1]] = 4 # Pared móvil
-                self.original_maze_content[pos[0]][pos[1]] = 0 # Moving walls are considered path in original layout
+                self.original_maze_content[pos[0]][pos[1]] = 0 # los muros se consideran caminos en el diseño original
                 self.moving_walls.append(pos)
                 self.moving_wall_directions[pos] = random.choice([-1, 1])
 
@@ -271,30 +284,36 @@ class LaberintoApp:
         - controles de movimiento
         """
         self.clear_frame()
-        
+        # Cargar imagen de fondo para el laberinto
+        maze_bg_image = Image.open("imagen.png")  
+        maze_bg_image = maze_bg_image.resize((900, 900))
+        self.maze_bg_photo = ImageTk.PhotoImage(maze_bg_image)
+        bg_label = tk.Label(self.root, image=self.maze_bg_photo)
+        bg_label.place(x=0, y=0, relwidth=1, relheight=1)   
+
         # Panel de información superior
         info_frame = tk.Frame(self.root)
         info_frame.pack(fill=tk.X, pady=5)
         tk.Label(info_frame, text=f"Jugador: {self.player_name}").pack(side=tk.LEFT, padx=10)
         tk.Label(info_frame, text=f"Nivel: {self.level}").pack(side=tk.LEFT, padx=10)
-        self.lives_label = tk.Label(info_frame, text=f"Vidas: {self.lives}")
+        self.lives_label = tk.Label(info_frame, text=f"Vidas: {self.lives}", font=("Arial", 18))
         self.lives_label.pack(side=tk.LEFT, padx=10)
         self.keys_label = tk.Label(info_frame, text=f"Llaves: {self.keys_collected}/{self.keys_required}")
         self.keys_label.pack(side=tk.LEFT, padx=10)
-        self.time_label = tk.Label(info_frame, text="Tiempo: 0.00s")
+        self.time_label = tk.Label(info_frame, text="Tiempo: 0.00s", font=("Arial", 18))
         self.time_label.pack(side=tk.LEFT, padx=10)
         self.update_timer()
         
-        # Mapa del laberinto (grilla de celdas)
+        # Mapa del laberinto
         maze_frame = tk.Frame(self.root)
-        maze_frame.pack(pady=10)
+        maze_frame.pack(pady=30)
         self.cells = []
         for i, row in enumerate(self.maze):
             cell_row = []
             for j, cell in enumerate(row):
-                # Determine cell color based on maze content
+                # Determina el color de la celda según su tipo
                 bg = "black" if cell == 1 else "green" if cell == 2 else "gold" if cell == 3 else "gray" if cell == 4 else "white"
-                lbl = tk.Label(maze_frame, width=2, height=1, relief="solid", borderwidth=1, bg=bg)
+                lbl = tk.Label(maze_frame, width=4, height=2, relief="solid", borderwidth=3, bg=bg)
                 if (i, j) == self.player_pos:
                     lbl.config(bg="blue")
                 lbl.grid(row=i, column=j)
@@ -303,14 +322,14 @@ class LaberintoApp:
         
         # Controles de movimiento (flechas)
         controls = tk.Frame(self.root)
-        controls.pack(pady=10)
+        controls.pack(pady=20)
         for text, dr, dc, row, col in [("↑", -1, 0, 0, 1), ("←", 0, -1, 1, 0), 
                                          ("→", 0, 1, 1, 2), ("↓", 1, 0, 2, 1)]:
             tk.Button(controls, text=text, command=lambda dr=dr, dc=dc: self.move_player(dr, dc), 
-                            width=3).grid(row=row, column=col, padx=5, pady=5)
+                            width=3, height=2, font=("Arial", 18)).grid(row=row, column=col, padx=12, pady=12)
         
         # Botón para volver al menú
-        tk.Button(self.root, text="Menú Principal", command=self.show_main_menu).pack(pady=10)
+        tk.Button(self.root, text="Menú Principal", command=self.show_main_menu, font=("Arial",18), width=20, height=2).pack(pady=10)
 
     def update_timer(self):
         """
@@ -332,70 +351,61 @@ class LaberintoApp:
             return
 
         new_moving_walls_state = []
-        walls_to_remove_from_directions = [] # To clean up old keys in dictionary
+        walls_to_remove_from_directions = [] # Para limpiar claves antiguas en el diccionario
         
-        # Iterate over a copy of moving_walls as it will be modified
+        # Iterar sobre una copia de moving_walls tal como se modificará
         current_moving_walls = list(self.moving_walls) 
         
         for r, c in current_moving_walls:
-            direction = self.moving_wall_directions.get((r,c), 1) # Get direction, default to 1 if not found
+            direction = self.moving_wall_directions.get((r,c), 1) #   obtener dirección, por defecto 1 si no se encuentra
 
             new_c_candidate = c + direction
             
-            # 1. Check for boundary conditions for the wall's movement
+            # 1. Verifica las condiciones de contorno para el movimiento de la pared.
             if not (0 <= new_c_candidate < len(self.maze[0])):
-                direction *= -1 # Reverse direction
-                new_c_candidate = c + direction # Recalculate candidate position
-            
-            # 2. Check the content of the target cell.
-            # Walls cannot move onto fixed walls, keys, or the exit.
+                direction *= -1 # Dirección inversa
+                new_c_candidate = c + direction # Recalcular posición candidata
+
+            # 2. Verifica el contenido de la celda objetivo.
+            # Las paredes no pueden moverse a muros fijos, llaves o la salida.
             target_cell_content = self.maze[r][new_c_candidate]
-            if target_cell_content in [1, 2, 3]: # Fixed wall, Exit, or Key
-                direction *= -1 # Reverse direction
-                new_c = c # Wall stays in current position for this turn
+            if target_cell_content in [1, 2, 3]: # Muro fijo, Salida o Llave
+                direction *= -1 # Dirección inversa
+                new_c = c # La pared se queda en su posición actual durante este turno
             else:
                 new_c = new_c_candidate
 
-            # 3. Handle collision with player if the wall *tries* to move into player's cell
+            # 3. Manejar la colisión con el jugador si la pared *intenta* moverse a la celda del jugador
             if (r, new_c) == self.player_pos:
                 self.hit_wall()
-                # The wall will stay in its original position for this turn, but reverses direction for next.
-                # The player remains in their position and loses a life.
-                self.maze[r][c] = 4 # Ensure wall stays at its current location in maze data
-                if (r,c) not in new_moving_walls_state: # Add current position to new state to keep tracking
-                    new_moving_walls_state.append((r,c)) 
-                self.moving_wall_directions[(r,c)] = direction # Update direction for next turn
-                # Visual update for the wall's current cell, ensuring it's gray
-                self.cells[r][c].config(bg="gray") 
-                continue # Skip remaining logic for this wall, move to next wall
-
-            # 4. If wall moves, update maze data and UI
-            if (r, c) != (r, new_c): # If the wall actually moved to a new cell
-                # Restore the old cell to its original maze content
+                # La pared se quedará en su posición original durante este turno, pero invertirá la dirección para el siguiente.
+                # El jugador permanece en su posición y pierde una vida.
+               
+            if (r, c) != (r, new_c): # Si la pared se mueve a una nueva posición
+                # Restaurar la celda antigua a su contenido original del laberinto
                 self.maze[r][c] = self.original_maze_content[r][c] 
                 self.cells[r][c].config(bg=self._get_cell_color(self.original_maze_content[r][c]))
-                
-                # Update maze with new wall position
-                self.maze[r][new_c] = 4 
-                self.cells[r][new_c].config(bg="gray") # New wall position is gray
+
+                # Actualizar el laberinto con la nueva posición de la pared
+                self.maze[r][new_c] = 4
+                self.cells[r][new_c].config(bg="gray") # La nueva posición de la pared es gris
 
                 new_moving_walls_state.append((r, new_c))
                 self.moving_wall_directions[(r, new_c)] = direction
-                walls_to_remove_from_directions.append((r,c)) # Mark old position for removal
-            else: # Wall didn't move (hit boundary or forbidden cell), just ensure it's gray
-                self.maze[r][c] = 4 # Confirm it's still a wall in data
+                walls_to_remove_from_directions.append((r,c)) # Marcar posición antigua para eliminación
+            else: # La pared no se movió (chocó con el límite o celda prohibida)
+                self.maze[r][c] = 4 # Confirmar que sigue siendo una pared en los datos
                 self.cells[r][c].config(bg="gray")
-                if (r,c) not in new_moving_walls_state: # Ensure it's added to the new state
-                    new_moving_walls_state.append((r,c)) 
-                self.moving_wall_directions[(r,c)] = direction # Ensure direction is updated
+                if (r,c) not in new_moving_walls_state: # Asegurarse de que se agregue al nuevo estado
+                    new_moving_walls_state.append((r,c))
+                self.moving_wall_directions[(r,c)] = direction # Asegurarse de que la dirección se actualice
 
         self.moving_walls = new_moving_walls_state
         for old_pos in walls_to_remove_from_directions:
             if old_pos in self.moving_wall_directions and old_pos not in self.moving_walls:
                 del self.moving_wall_directions[old_pos]
 
-        self.root.after(500, self.animate_moving_walls) # Call again for continuous animation
-
+        self.root.after(500, self.animate_moving_walls) # llamar de nuevo para la siguiente animación
     def move_player(self, dr, dc):
         """
         Mueve al jugador en la dirección indicada.
@@ -405,48 +415,56 @@ class LaberintoApp:
         """
         if not self.game_active:
             return
-        
+
         r, c = self.player_pos
         new_r, new_c = r + dr, c + dc
         
         if 0 <= new_r < len(self.maze) and 0 <= new_c < len(self.maze[0]):
             target_cell_content = self.maze[new_r][new_c]
-            
-            # Check for immediate collision with a moving wall
-            if target_cell_content == 4: # Player trying to move into a moving wall
-                self.hit_wall()
-                return # Player doesn't move
 
-            # Valid movement: path (0), exit (2), or key (3)
-            if target_cell_content == 0 or target_cell_content == 2 or target_cell_content == 3:
-                
-                # Restore the old cell's visual based on its original content
+            # Si es pared móvil, pierde vida y se mueve (parpadea en rojo la nueva celda)
+            if target_cell_content == 4:
                 self.cells[r][c].config(bg=self._get_cell_color(self.original_maze_content[r][c]))
-
-                if target_cell_content == 3: # If moving onto a key
-                    self.keys_collected += 1
-                    self.keys_label.config(text=f"Llaves: {self.keys_collected}/{self.keys_required}")
-                    self.maze[new_r][new_c] = 0 # Key cell becomes path after collection
-                    self.original_maze_content[new_r][new_c] = 0 # Mark key as collected in original content
-
-                # Update player's position
                 self.player_pos = (new_r, new_c)
-                self.cells[new_r][new_c].config(bg="blue") # Paint new player position blue
-                
-                # Check if game won AFTER player has moved to new_pos
+                # Parpadeo en rojo en la nueva celda
+                self.cells[new_r][new_c].config(bg="red")
+                self.lives -= 1
+                self.lives_label.config(text=f"Vidas: {self.lives}")
+                self.root.update_idletasks()
+                self.root.after(200, lambda: self.cells[new_r][new_c].config(bg="blue"))
+                if self.lives <= 0:
+                    self.game_active = False
+                    messagebox.showinfo("Game Over", "¡Te quedaste sin vidas!")
+                    self.show_main_menu()
+                    return
                 if self.player_pos == self.exit_pos and self.keys_collected >= self.keys_required:
                     self.game_won()
-            
-            elif target_cell_content == 1: # Attempting to move into a fixed wall
-                pass # Player doesn't move, no life lost for fixed walls.
+                return
+
+            # Si es camino, salida o llave
+            if target_cell_content in [0, 2, 3]:
+                self.cells[r][c].config(bg=self._get_cell_color(self.original_maze_content[r][c]))
+
+                if target_cell_content == 3:  # Si el jugador recoge una llave
+                    self.keys_collected += 1
+                    self.keys_label.config(text=f"Llaves: {self.keys_collected}/{self.keys_required}")
+                    self.maze[new_r][new_c] = 0
+                    self.original_maze_content[new_r][new_c] = 0
+
+                self.player_pos = (new_r, new_c)
+                self.cells[new_r][new_c].config(bg="blue")
+
+                if self.player_pos == self.exit_pos and self.keys_collected >= self.keys_required:
+                    self.game_won()
+        # Si es pared fija, no hace nada
 
     def _get_cell_color(self, cell_type):
-        """Helper to get the background color for a cell type."""
-        if cell_type == 1: return "black" # Wall
-        if cell_type == 2: return "green" # Exit
-        if cell_type == 3: return "gold"  # Key
-        if cell_type == 4: return "gray"  # Moving Wall (though these are managed dynamically)
-        return "white" # Path (0)
+        """Ayuda para obtener el color de fondo para un tipo de celda."""
+        if cell_type == 1: return "black" # Pared
+        if cell_type == 2: return "green" # Salida
+        if cell_type == 3: return "gold"  # Llave
+        if cell_type == 4: return "gray"  # Pared en movimiento (aunque estas se gestionan dinámicamente)
+        return "white" # Camino (0)
 
     def hit_wall(self):
         """
@@ -455,30 +473,33 @@ class LaberintoApp:
         """
         self.lives -= 1
         self.lives_label.config(text=f"Vidas: {self.lives}")
-        
-        # Visual effect of collision: player's cell flashes red
+
+        # Efecto visual de colisión: la celda del jugador parpadea en rojo
         r, c = self.player_pos
-        original_player_color = "blue" # Player is always blue
+        original_player_color = "blue" # El jugador siempre es azul
         self.cells[r][c].config(bg="red")
-        self.root.update_idletasks() # Ensure visual change is shown immediately
-        self.root.after(200, lambda: self.cells[r][c].config(bg=original_player_color)) # Revert to blue
-        
-        # If player runs out of lives, end the game
+        self.root.update_idletasks() # Asegurarse de que el cambio visual se muestre inmediatamente
+        self.root.after(200, lambda: self.cells[r][c].config(bg=original_player_color)) # Revertir a azul
+
+        # Si el jugador se queda sin vidas, termina el juego
         if self.lives <= 0:
-            self.game_active = False # Stop the game before showing message
+            self.game_active = False # Detener el juego antes de mostrar el mensaje
             messagebox.showinfo("Game Over", "¡Te quedaste sin vidas!")
             self.show_main_menu()
 
     def game_won(self):
         """
-        Se llama cuando el jugador completa el nivel exitosamente.
-        Guarda la puntuación y muestra un mensaje de felicitación.
+        Se llama cuando el jugador completa el laberinto.
+        Muestra un mensaje de victoria y guarda la puntuación.
         """
-        self.game_active = False # Stop the game on win
-        elapsed = time.time() - self.start_time
+        elapsed_time = time.time() - self.start_time
+        messagebox.showinfo("¡Victoria!", f"¡Felicidades {self.player_name}! Has completado el laberinto en {elapsed_time:.2f} segundos.")
+        
+        # Guardar la puntuación en el archivo CSV
         with open(self.scores_file, 'a', newline='') as f:
-            csv.writer(f).writerow([self.player_name, self.level, f"{elapsed:.2f}", self.lives, self.keys_collected])
-        messagebox.showinfo("¡Ganaste!", f"¡Felicidades {self.player_name}!\nCompletaste el nivel en {elapsed:.2f} segundos.")
+            writer = csv.writer(f)
+            writer.writerow([self.player_name, self.level, f"{elapsed_time:.2f}", self.lives, self.keys_collected])
+        
         self.show_main_menu()
 
     def game_over(self):
@@ -487,7 +508,7 @@ class LaberintoApp:
         Muestra un mensaje de 'Game Over'.
         (This function is currently not directly called as hit_wall handles game_over)
         """
-        self.game_active = False # Stop the game on loss
+        self.game_active = False # Detener el juego en la pérdida
         messagebox.showinfo("Game Over", "¡Te quedaste sin vidas!")
         self.show_main_menu()
 
@@ -497,26 +518,26 @@ class LaberintoApp:
         Se cargan las puntuaciones desde el archivo CSV y se ordenan por tiempo.
         """
         self.clear_frame()
-        tk.Label(self.root, text="MEJORES PUNTUACIONES", font=("Arial", 20)).pack(pady=20)
+        tk.Label(self.root, text="MEJORES PUNTUACIONES", font=("Press Start 2P", 10)).pack(pady=20)
         
         frame = tk.Frame(self.root)
-        frame.pack(pady=10, padx=20, fill=tk.BOTH, expand=True)
-        
-        # Table Headers
+        frame.pack(pady=6, padx=15, fill=tk.BOTH, expand=True)
+
+        # Encabezados de la tabla
         headers = ["Nombre", "Nivel", "Tiempo", "Vidas", "Llaves"]
         for col, header in enumerate(headers):
-            tk.Label(frame, text=header, font=("Arial", 10, "bold"), relief="ridge", 
+            tk.Label(frame, text=header, font=("Press Start 2P", 10, "bold"), relief="ridge", 
                             padx=10, pady=5).grid(row=0, column=col, sticky="nsew")
-        
-        # Table Content
+
+        # Contenido de la tabla
         scores = []
         if os.path.exists(self.scores_file):
             with open(self.scores_file, 'r') as f:
                 reader = csv.reader(f)
-                next(reader) # Skip header
+                next(reader) # saltar encabezados
                 raw_scores = [row for row in reader if len(row) == 5]
                 try:
-                    scores = sorted(raw_scores, key=lambda x: float(x[2]))[:10] # Top 10 by time
+                    scores = sorted(raw_scores, key=lambda x: float(x[2]))[:10] # los primeros 10 por tiempo
                 except ValueError:
                     messagebox.showerror("Error de Puntuación", "Algunas puntuaciones en el archivo están corruptas y no se pudieron cargar correctamente.")
                     scores = [] 
@@ -525,12 +546,12 @@ class LaberintoApp:
             for col_idx, value in enumerate(row):
                 tk.Label(frame, text=value, relief="ridge", padx=10, pady=5).grid(
                     row=row_idx, column=col_idx, sticky="nsew")
-        
-        # Column expansion adjustment
+
+        # Ajuste de expansión de columnas
         for i in range(len(headers)):
             frame.grid_columnconfigure(i, weight=1)
-        
-        # Button to return to menu
+
+        # Botón para volver al menú
         tk.Button(self.root, text="Volver al Menú", command=self.show_main_menu).pack(pady=20)
 
     def clear_frame(self):
